@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#2563EB"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-title" content="PhishBuster"/>
+  <title>PhishBuster 2.0</title>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="apple-touch-icon" href="icon-192.png"/>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Segoe UI',Arial,sans-serif;background:#F6F8FA;color:#111827;min-height:100vh;display:flex;flex-direction:column;}
+    .header{background:#fff;padding:14px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #E4E7EC;position:sticky;top:0;z-index:100;}
+    .header-icon{width:32px;height:32px;background:#EFF6FF;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+    .header-title{font-size:18px;font-weight:600;color:#111827;}
+    .header-sub{font-size:11px;color:#6B7280;margin-top:2px;}
+    .status-dot{width:8px;height:8px;background:#22C55E;border-radius:50%;margin-left:auto;animation:pulse 2s infinite;}
+    @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+    .main{flex:1;padding:20px 16px;max-width:640px;margin:0 auto;width:100%;}
+    .card{background:#fff;border-radius:12px;border:1px solid #E4E7EC;padding:18px;margin-bottom:16px;}
+    .input-label{font-size:12px;color:#6B7280;margin-bottom:8px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
+    .input-row{display:flex;gap:8px;}
+    .url-input{flex:1;background:#F9FAFB;border:1px solid #E4E7EC;border-radius:8px;padding:11px 14px;color:#111827;font-size:14px;outline:none;transition:border 0.2s;}
+    .url-input:focus{border-color:#2563EB;}
+    .url-input::placeholder{color:#9CA3AF;}
+    .scan-btn{background:#2563EB;border:none;border-radius:8px;padding:11px 20px;color:#fff;font-weight:600;font-size:14px;cursor:pointer;transition:opacity 0.2s;}
+    .scan-btn:disabled{opacity:0.5;cursor:not-allowed;}
+    .scan-btn:hover{opacity:0.9;}
+    .loading{display:none;text-align:center;padding:24px;}
+    .loading.show{display:block;}
+    .spinner{width:40px;height:40px;border:3px solid #E4E7EC;border-top:3px solid #2563EB;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .loading-text{font-size:13px;color:#6B7280;}
+    .result-card{display:none;border-radius:12px;padding:18px;margin-bottom:16px;border:1px solid;animation:slideUp 0.3s ease;}
+    @keyframes slideUp{from{transform:translateY(16px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+    .result-card.show{display:block;}
+    .result-card.safe{background:#F0FDF4;border-color:#86EFAC;}
+    .result-card.suspicious{background:#FFFBEB;border-color:#FCD34D;}
+    .result-card.malicious{background:#FEF2F2;border-color:#FCA5A5;}
+    .verdict-row{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+    .verdict-icon{font-size:36px;}
+    .verdict-text{font-size:22px;font-weight:700;}
+    .verdict-text.safe{color:#16A34A;}
+    .verdict-text.suspicious{color:#D97706;}
+    .verdict-text.malicious{color:#DC2626;}
+    .score-bar{height:7px;background:#E4E7EC;border-radius:4px;overflow:hidden;margin-bottom:14px;}
+    .score-fill{height:100%;border-radius:4px;transition:width 0.8s ease;}
+    .score-fill.safe{background:#22C55E;}
+    .score-fill.suspicious{background:#F59E0B;}
+    .score-fill.malicious{background:#EF4444;}
+    .ai-box{background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:12px;margin-bottom:14px;font-size:13px;color:#1E40AF;line-height:1.7;}
+    .ai-label{font-size:11px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:6px;color:#2563EB;}
+    .section-title{font-size:11px;color:#6B7280;text-transform:uppercase;letter-spacing:0.8px;font-weight:600;margin-bottom:10px;}
+    .detail-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #F3F4F6;font-size:13px;}
+    .detail-row:last-child{border-bottom:none;}
+    .detail-key{color:#6B7280;}
+    .detail-val{color:#111827;font-weight:500;text-align:right;max-width:60%;}
+    .badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+    .badge.clean{background:#DCFCE7;color:#166534;}
+    .badge.threat{background:#FEE2E2;color:#991B1B;}
+    .badge.warn{background:#FEF3C7;color:#92400E;}
+    .badge.info{background:#EFF6FF;color:#1E40AF;}
+    .flags-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+    .flag-chip{background:#FEE2E2;border:1px solid #FECACA;color:#991B1B;padding:3px 10px;border-radius:20px;font-size:11px;}
+    .flag-chip.none{background:#DCFCE7;border-color:#BBF7D0;color:#166534;}
+    .scanned-url{background:#F9FAFB;border-radius:7px;padding:9px 12px;font-size:12px;color:#2563EB;word-break:break-all;margin-bottom:12px;border:1px solid #E4E7EC;}
+    .history-title{font-size:12px;color:#6B7280;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;}
+    .history-item{background:#fff;border-radius:8px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;cursor:pointer;border:1px solid #E4E7EC;transition:border 0.2s;}
+    .history-item:hover{border-color:#2563EB;}
+    .history-url{font-size:12px;color:#6B7280;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .history-score{font-size:13px;font-weight:600;}
+    .history-score.safe{color:#16A34A;}
+    .history-score.suspicious{color:#D97706;}
+    .history-score.malicious{color:#DC2626;}
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:#111827;color:#fff;padding:10px 22px;border-radius:20px;font-size:13px;font-weight:500;transition:transform 0.3s;z-index:999;}
+    .toast.show{transform:translateX(-50%) translateY(0);}
+    .footer{text-align:center;padding:14px;font-size:11px;color:#9CA3AF;}
+    .warning-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;padding:20px;}
+    .warning-overlay.show{display:flex;}
+    .warning-popup{background:#fff;border:2px solid #EF4444;border-radius:16px;padding:24px;max-width:380px;width:100%;text-align:center;}
+    .warning-icon{font-size:48px;margin-bottom:10px;}
+    .warning-title{font-size:20px;font-weight:700;color:#DC2626;margin-bottom:8px;}
+    .warning-msg{font-size:13px;color:#6B7280;line-height:1.6;margin-bottom:16px;}
+    .warning-url{font-size:11px;color:#EF4444;word-break:break-all;margin-bottom:16px;background:#FEF2F2;padding:8px;border-radius:6px;}
+    .warning-btns{display:flex;gap:8px;}
+    .btn-back{flex:1;background:#22C55E;border:none;border-radius:8px;padding:12px;color:#fff;font-weight:600;font-size:14px;cursor:pointer;}
+    .btn-proceed{flex:1;background:#fff;border:1px solid #EF4444;border-radius:8px;padding:12px;color:#EF4444;font-weight:500;font-size:13px;cursor:pointer;}
+    .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+    .info-box{background:#F9FAFB;border:1px solid #E4E7EC;border-radius:8px;padding:10px 12px;}
+    .info-box-label{font-size:10px;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;}
+    .info-box-val{font-size:13px;font-weight:500;color:#111827;}
+  </style>
+</head>
+<body>
+
+<div class="warning-overlay" id="warningOverlay">
+  <div class="warning-popup">
+    <div class="warning-icon">🚨</div>
+    <div class="warning-title">Danger!</div>
+    <div class="warning-msg">This URL is <strong>malicious</strong>. Visiting it may steal your data or compromise your device.</div>
+    <div class="warning-url" id="warningUrl"></div>
+    <div class="warning-btns">
+      <button class="btn-back" onclick="closeWarning()">Go Back (Safe)</button>
+      <button class="btn-proceed" onclick="closeWarning()">Proceed Anyway</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="header">
+  <div class="header-icon">🛡️</div>
+  <div>
+    <div class="header-title">PhishBuster 2.0</div>
+    <div class="header-sub">AI-Powered URL Scanner</div>
+  </div>
+  <div class="status-dot"></div>
+</div>
+
+<div class="main">
+  <div class="card">
+    <div class="input-label">Scan a URL</div>
+    <div class="input-row">
+      <input class="url-input" id="urlInput" type="url" placeholder="Paste URL here..." autocomplete="off" spellcheck="false"/>
+      <button class="scan-btn" id="scanBtn" onclick="scanUrl()">Scan</button>
+    </div>
+  </div>
+
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loadingText">Initializing scan...</div>
+  </div>
+
+  <div class="result-card" id="resultCard">
+    <div class="scanned-url" id="scannedUrl"></div>
+    <div class="verdict-row">
+      <div class="verdict-icon" id="verdictIcon"></div>
+      <div>
+        <div class="verdict-text" id="verdictText"></div>
+        <div style="font-size:12px;color:#6B7280;margin-top:2px;" id="scoreLabel"></div>
+      </div>
+    </div>
+    <div class="score-bar">
+      <div class="score-fill" id="scoreFill" style="width:0%"></div>
+    </div>
+    <div class="ai-box">
+      <div class="ai-label">AI Analysis</div>
+      <div id="aiText"></div>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <div class="section-title">IP & Hosting Info</div>
+      <div class="info-grid">
+        <div class="info-box">
+          <div class="info-box-label">IP Address</div>
+          <div class="info-box-val" id="ipAddr">—</div>
+        </div>
+        <div class="info-box">
+          <div class="info-box-label">Platform</div>
+          <div class="info-box-val" id="hostPlatform">—</div>
+        </div>
+        <div class="info-box">
+          <div class="info-box-label">ISP</div>
+          <div class="info-box-val" id="ispName">—</div>
+        </div>
+        <div class="info-box">
+          <div class="info-box-label">Location</div>
+          <div class="info-box-val" id="hostLocation">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <div class="section-title">Detection Sources</div>
+      <div class="detail-row"><span class="detail-key">VirusTotal</span><span id="vtResult"></span></div>
+      <div class="detail-row"><span class="detail-key">Google Safe Browsing</span><span id="gsbResult"></span></div>
+      <div class="detail-row"><span class="detail-key">Domain Age</span><span id="domainAge"></span></div>
+      <div class="detail-row"><span class="detail-key">Registrar</span><span class="detail-val" id="registrar"></span></div>
+      <div class="detail-row"><span class="detail-key">Heuristic Score</span><span id="heuristicScore"></span></div>
+    </div>
+
+    <div>
+      <div class="section-title">Flags Detected</div>
+      <div class="flags-wrap" id="flagsWrap"></div>
+    </div>
+  </div>
+
+  <div id="historySection" style="display:none;">
+    <div class="history-title">Recent Scans</div>
+    <div id="historyList"></div>
+  </div>
+</div>
+
+<div class="footer">PhishBuster 2.0 — AI-Powered Protection</div>
+
+<script>
+  const API = 'https://phishbuster-r1kj.onrender.com';
+
+  const steps = [
+    'Connecting to PhishBuster AI...',
+    'Running heuristic analysis...',
+    'Checking VirusTotal (70+ engines)...',
+    'Querying Google Safe Browsing...',
+    'Fetching IP & hosting info...',
+    'Generating AI verdict...'
+  ];
+  let stepInterval = null;
+
+  function startSteps(){
+    let i=0;
+    document.getElementById('loadingText').textContent=steps[0];
+    stepInterval=setInterval(()=>{
+      i=Math.min(i+1,steps.length-1);
+      document.getElementById('loadingText').textContent=steps[i];
+    },2200);
+  }
+  function stopSteps(){ clearInterval(stepInterval); }
+
+  async function scanUrl(){
+    let url=document.getElementById('urlInput').value.trim();
+    if(!url){showToast('Please enter a URL');return;}
+    if(!url.startsWith('http')) url='https://'+url;
+    document.getElementById('resultCard').className='result-card';
+    document.getElementById('loading').classList.add('show');
+    document.getElementById('scanBtn').disabled=true;
+    document.getElementById('historySection').style.display='none';
+    startSteps();
+    try{
+      const res=await fetch(`${API}/scan`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
+      if(!res.ok) throw new Error();
+      const data=await res.json();
+      stopSteps();
+      document.getElementById('loading').classList.remove('show');
+      showResult(data);
+    }catch(e){
+      stopSteps();
+      document.getElementById('loading').classList.remove('show');
+      document.getElementById('scanBtn').disabled=false;
+      showToast('Connection failed. Is the backend running?');
+    }
+  }
+
+  function showResult(data){
+    const verdict=data.verdict.toLowerCase();
+    const score=data.risk_score;
+    const card=document.getElementById('resultCard');
+    card.className=`result-card show ${verdict}`;
+    document.getElementById('scannedUrl').textContent=data.url;
+    const icons={safe:'✅',suspicious:'⚠️',malicious:'🚨'};
+    document.getElementById('verdictIcon').textContent=icons[verdict]||'❓';
+    const vt=document.getElementById('verdictText');
+    vt.textContent=data.verdict;
+    vt.className=`verdict-text ${verdict}`;
+    document.getElementById('scoreLabel').textContent=`Risk Score: ${score}/100`;
+    const fill=document.getElementById('scoreFill');
+    fill.className=`score-fill ${verdict}`;
+    setTimeout(()=>{fill.style.width=score+'%';},100);
+    document.getElementById('aiText').textContent=data.ai_explanation||'AI analysis not available.';
+
+    const ip=data.ip_info||{};
+    document.getElementById('ipAddr').textContent=ip.ip||'—';
+    document.getElementById('hostPlatform').textContent=ip.platform||'—';
+    document.getElementById('ispName').textContent=ip.isp||'—';
+    document.getElementById('hostLocation').textContent=
+      (ip.city&&ip.country)?`${ip.city}, ${ip.country}`:(ip.country||'—');
+
+    const vt_data=data.virustotal||{};
+    document.getElementById('vtResult').innerHTML=
+      `<span class="badge ${vt_data.malicious>0?'threat':'clean'}">${vt_data.malicious||0}/${vt_data.total||0} engines</span>`;
+    const gsb=data.google_safebrowsing||{};
+    document.getElementById('gsbResult').innerHTML=
+      `<span class="badge ${!gsb.safe?'threat':'clean'}">${!gsb.safe?'🚨 '+( gsb.threats||[]).join(', '):'✅ Clean'}</span>`;
+    const dom=data.domain_info||{};
+    document.getElementById('domainAge').innerHTML=
+      `<span class="badge ${dom.young_domain?'warn':'info'}">${dom.age_days>=0?dom.age_days+' days':'Unknown'}${dom.young_domain?' ⚠️':''}</span>`;
+    document.getElementById('registrar').textContent=dom.registrar||'Unknown';
+    const h=data.heuristic||{};
+    document.getElementById('heuristicScore').innerHTML=
+      `<span class="badge ${h.heuristic_score>=60?'threat':h.heuristic_score>=30?'warn':'clean'}">${h.heuristic_score||0}/100</span>`;
+
+    const fw=document.getElementById('flagsWrap');
+    fw.innerHTML='';
+    const reasons=h.reasons||[];
+    if(reasons.length===0){
+      fw.innerHTML='<span class="flag-chip none">No flags detected</span>';
+    }else{
+      reasons.forEach(r=>{
+        const c=document.createElement('span');
+        c.className='flag-chip';
+        c.textContent=r;
+        fw.appendChild(c);
+      });
+    }
+    document.getElementById('scanBtn').disabled=false;
+    if(verdict==='malicious') setTimeout(()=>showWarning(data.url),400);
+    if(navigator.vibrate){
+      if(verdict==='malicious') navigator.vibrate([200,100,200,100,400]);
+      else if(verdict==='suspicious') navigator.vibrate(200);
+    }
+    loadHistory();
+  }
+
+  function showWarning(url){
+    document.getElementById('warningUrl').textContent=url;
+    document.getElementById('warningOverlay').classList.add('show');
+  }
+  function closeWarning(){
+    document.getElementById('warningOverlay').classList.remove('show');
+  }
+
+  async function loadHistory(){
+    try{
+      const res=await fetch(`${API}/history`);
+      const data=await res.json();
+      if(!data||data.length===0) return;
+      const list=document.getElementById('historyList');
+      list.innerHTML='';
+      data.slice(0,5).forEach(item=>{
+        const vc=item.verdict.toLowerCase();
+        const icons={safe:'✅',suspicious:'⚠️',malicious:'🚨'};
+        const div=document.createElement('div');
+        div.className='history-item';
+        div.innerHTML=`
+          <span style="font-size:16px;">${icons[vc]||'❓'}</span>
+          <span class="history-url">${item.url}</span>
+          <span class="history-score ${vc}">${item.risk_score}</span>`;
+        div.onclick=()=>{document.getElementById('urlInput').value=item.url;scanUrl();};
+        list.appendChild(div);
+      });
+      document.getElementById('historySection').style.display='block';
+    }catch(e){}
+  }
+
+  function showToast(msg){
+    const t=document.getElementById('toast');
+    t.textContent=msg;
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'),3000);
+  }
+
+  document.getElementById('urlInput').addEventListener('keydown',e=>{
+    if(e.key==='Enter') scanUrl();
+  });
+
+  window.addEventListener('load',()=>{
+    const params=new URLSearchParams(window.location.search);
+    const shared=params.get('url')||params.get('text');
+    if(shared){document.getElementById('urlInput').value=shared;setTimeout(()=>scanUrl(),500);}
+    loadHistory();
+  });
+
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  }
+</script>
+</body>
+</html>
