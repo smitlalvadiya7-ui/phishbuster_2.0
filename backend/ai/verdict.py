@@ -2,7 +2,7 @@ import os
 import requests
 
 def get_ai_verdict(url, heuristic, vt_result, gsb_result, domain_info):
-    api_key = os.getenv("AIzaSyDcTOq0r7ITdnVW4iwL6OMAxCJ4Nfgf5Sg")
+    api_key = "AIzaSyDcTOq0r7ITdnVW4iwL6OMAxCJ4Nfgf5Sg"
     if not api_key:
         return "AI analysis unavailable - API key not set."
     try:
