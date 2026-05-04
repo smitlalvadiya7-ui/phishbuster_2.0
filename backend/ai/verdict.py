@@ -23,16 +23,15 @@ def get_ai_verdict(url, heuristic, vt_result, gsb_result, domain_info):
         )
 
         res = requests.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}",
+            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}",
             json={"contents": [{"parts": [{"text": prompt}]}]},
             timeout=10
         )
         data = res.json()
-        
-        # Debug: agar candidates nahi mila
+
         if "candidates" not in data:
             return f"Gemini error: {data}"
-            
+
         return data["candidates"][0]["content"]["parts"][0]["text"]
     except Exception as e:
         return f"AI analysis error: {str(e)}"
