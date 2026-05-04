@@ -4,5 +4,5 @@ requests
 tldextract
 python-whois
 python-dotenv
-anthropic==0.40.0
+anthropic>=0.50.0
 aiohttp
