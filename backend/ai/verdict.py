@@ -23,7 +23,7 @@ def get_ai_verdict(url, heuristic, vt_result, gsb_result, domain_info):
         )
 
         res = requests.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}",
+            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key={api_key}",
             json={"contents": [{"parts": [{"text": prompt}]}]},
             timeout=10
         )
