@@ -2,7 +2,7 @@ import os
 import requests
 
 def get_ai_verdict(url, heuristic, vt_result, gsb_result, domain_info):
-    api_key = "AIzaSyDcTOq0r7ITdnVW4iwL6OMAxCJ4Nfgf5Sg"
+    api_key = "AIzaSyAV5YH-Q6h7RnOjkPAYR4pukofCgZmVpEI"
     try:
         flags = ", ".join(heuristic["reasons"]) if heuristic["reasons"] else "None"
         score = heuristic["heuristic_score"]
