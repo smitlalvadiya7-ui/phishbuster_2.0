@@ -3,8 +3,6 @@ import requests
 
 def get_ai_verdict(url, heuristic, vt_result, gsb_result, domain_info):
     api_key = "AIzaSyDcTOq0r7ITdnVW4iwL6OMAxCJ4Nfgf5Sg"
-    if not api_key:
-        return "AI analysis unavailable - API key not set."
     try:
         flags = ", ".join(heuristic["reasons"]) if heuristic["reasons"] else "None"
         score = heuristic["heuristic_score"]
@@ -30,6 +28,11 @@ def get_ai_verdict(url, heuristic, vt_result, gsb_result, domain_info):
             timeout=10
         )
         data = res.json()
+        
+        # Debug: agar candidates nahi mila
+        if "candidates" not in data:
+            return f"Gemini error: {data}"
+            
         return data["candidates"][0]["content"]["parts"][0]["text"]
     except Exception as e:
         return f"AI analysis error: {str(e)}"
