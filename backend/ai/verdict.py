@@ -8,13 +8,12 @@ def get_ai_verdict(url, heuristic, vt_result, gsb_result, domain_info):
     try:
         prompt = f"""You are a cybersecurity expert analyzing a URL for phishing.
 URL: {url}
-Evidence:
-- Heuristic Risk Score: {heuristic['heuristic_score']}/100
-- Flags: {', '.join(heuristic['reasons']) if heuristic['reasons'] else 'None'}
-- VirusTotal: {vt_result.get('malicious', 0)} malicious out of {vt_result.get('total', 0)} engines
-- Google Safe Browsing: {'UNSAFE - ' + str(gsb_result['threats']) if not gsb_result['safe'] else 'Clean'}
-- Domain Age: {domain_info.get('age_days', 'Unknown')} days
-Give final verdict SAFE/SUSPICIOUS/MALICIOUS and 2-3 sentence explanation. No markdown."""
+Heuristic Score: {heuristic[\"heuristic_score\"]}/100
+Flags: {", ".join(heuristic["reasons"]) if heuristic["reasons"] else "None"}
+VirusTotal: {vt_result.get("malicious", 0)} malicious out of {vt_result.get("total", 0)}
+Google Safe Browsing: {"UNSAFE" if not gsb_result["safe"] else "Clean"}
+Domain Age: {domain_info.get("age_days", "Unknown")} days
+Give verdict SAFE/SUSPICIOUS/MALICIOUS and 2-3 sentence explanation. No markdown."""
 
         res = requests.post(
             f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}",
